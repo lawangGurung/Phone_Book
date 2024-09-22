@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using Phone_Book.Lawang.Models;
 using Phone_Book.Lawang.View;
 using Spectre.Console;
+using Twilio.TwiML.Voice;
 
 namespace Phone_Book.Lawang;
 
@@ -102,16 +103,22 @@ public class UserInput
             AnsiConsole.Markup("[red bold]Invalid Input, Try Again (eg:- abc@gmail.com): [/]");
             email = Console.ReadLine()?.Trim();
         }
-
+        var countryCode = AnsiConsole.Ask<string>("[green]Enter Country Code with '+' at the begining: [bold]");
+        while (!Validation.IsCountryCodeValid(countryCode ?? ""))
+        {
+            if (countryCode == "0") return null;
+            AnsiConsole.Markup("[red bold]Invalid Input, Include '+' at the start (eg:- +91): [/]");
+            countryCode = Console.ReadLine()?.Trim();
+        }
         var number = AnsiConsole.Ask<string>("[green bold]Phone Number: [/]");
         while (!Validation.IsNumberValid(number ?? ""))
         {
             if (number == "0") return null;
-            AnsiConsole.Markup("[red bold]Invalid Input, Include 10 digit and '+' at the start (eg:- +1234567890): [/]");
+            AnsiConsole.Markup("[red bold]Invalid Input, Include 10 digit at the start (eg:- 1234567890): [/]");
             number = Console.ReadLine()?.Trim();
         }
-        
-        return new Contact() { Name = name, Email = email, PhoneNumber = number };
+
+        return new Contact() { Name = name, Email = email, PhoneNumber = countryCode + number };
     }
 
     public Contact? UpdateContact(Contact updatedContact, Option updateOption)
@@ -133,13 +140,21 @@ public class UserInput
                 break;
 
             case 3:
+                var countryCode = AnsiConsole.Ask<string>("[green bold]Enter Country Code with '+' at the begining: [/]");
+                while (!Validation.IsCountryCodeValid(countryCode ?? ""))
+                {
+                    if (countryCode == "0") return null;
+                    AnsiConsole.Markup("[red bold]Invalid Input, Include '+' at the start (eg:- +91): [/]");
+                    countryCode = Console.ReadLine()?.Trim();
+                }
                 var number = AnsiConsole.Ask<string>("[green bold]Phone Number: [/]");
                 while (!Validation.IsNumberValid(number ?? ""))
                 {
-                    AnsiConsole.Markup("[red bold]Invalid Input, Include 10 digit and '+' at the start (eg:- +1234567890): [/]");
+                    if (number == "0") return null;
+                    AnsiConsole.Markup("[red bold]Invalid Input, Include 10 -14 digit of your number (eg:- 1234567890): [/]");
                     number = Console.ReadLine()?.Trim();
                 }
-                updatedContact.PhoneNumber = number;
+                updatedContact.PhoneNumber = countryCode + number;
                 break;
 
             case 4:

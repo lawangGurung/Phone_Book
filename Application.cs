@@ -6,6 +6,10 @@ using Phone_Book.Lawang.Controller;
 using Phone_Book.Lawang.Models;
 using Phone_Book.Lawang.View;
 using Spectre.Console;
+using Twilio;
+using Twilio.Rest.Api.V2010.Account;
+using Twilio.TwiML.Messaging;
+using Twilio.Types;
 
 namespace Phone_Book.Lawang;
 
@@ -112,7 +116,7 @@ public class Application
                             AnsiConsole.MarkupLine("[green bold]\nMessage was successfully Sent!\n[grey](Press 'Enter' to continue)[/][/]");
                             Console.ReadLine();
                         }
-                        catch(Exception ex)
+                        catch (Exception ex)
                         {
                             AnsiConsole.MarkupLine($"[red bold]{ex.Message}[/]");
                             Console.ReadLine();
@@ -124,6 +128,20 @@ public class Application
                     }
                     break;
                 case 6:
+                    listOfContact = ShowContactTable(userInput);
+                    if (listOfContact == null) break;
+                    if (listOfContact.Count() > 0)
+                    {
+                        int id = userInput.ChooseId(listOfContact);
+                        if (id == 0) break;
+                        contact = listOfContact.First(c => c.Id == id);
+
+                        SendSMS(contact);
+                    }
+                    else
+                    {
+                        Console.ReadLine();
+                    }
                     break;
                 case 0:
                     exitApp = true;
@@ -150,7 +168,6 @@ public class Application
             return listOfContact.First(x => x.Id == id);
 
         }
-
 
     }
     private IEnumerable<Contact>? ShowContactTable(UserInput userInput)
@@ -266,11 +283,46 @@ public class Application
             Body = body
         };
 
-        AnsiConsole.Status().Start($"[green bold] Sending Email to {contact.Name} ...[/]", ctx =>  
+        AnsiConsole.Status().Start($"[green bold] Sending Email to {contact.Name} ...[/]", ctx =>
         {
             smtp.Send(message);
         });
 
 
+    }
+
+    private void SendSMS(Contact contact)
+    {
+        IConfigurationRoot config = new ConfigurationBuilder().AddUserSecrets<Application>().Build();
+        var messageBody = AnsiConsole.Ask<string>("[yellow bold]Write Your Message: [/]");
+
+        var twilioSID = config["TWILIO_SID"];
+        var twilioAUTH = config["TWILIO_AUTH"];
+        var twilioPhoneNumber = config["TWILIO_PHONE_NUMBER"];
+
+        TwilioClient.Init(twilioSID, twilioAUTH);
+
+        var senderNumber = new PhoneNumber(twilioPhoneNumber);
+        var receiverNumber = new PhoneNumber(contact.PhoneNumber);
+
+
+
+        try
+        {
+            var message = MessageResource.Create(
+                body: messageBody,
+                from: senderNumber,
+                to: receiverNumber
+            );
+
+            AnsiConsole.MarkupLine($"\n[green bold]Message Sent with SID: {message.Sid}[/]");
+            var messageStatus = MessageResource.Fetch(pathSid: message.Sid);
+            Console.ReadLine();
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.MarkupLine($"[red bold]{ex.Message}[/]");
+            Console.ReadLine();
+        }
     }
 }
