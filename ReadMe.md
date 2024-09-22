@@ -56,9 +56,10 @@ dotnet user-secrets set "TWILIO_PHONE_NUMBER" "YOUR PHONE"
 ```
  ## Screen shots:
 
+![Screenshot from 2024-09-22 15-29-32](https://github.com/user-attachments/assets/3ffeb191-6b7a-4820-a045-47e142811d7c)
+- Data is grouped according to Category.
 
-
-* ![App Screenshot]
+![Screenshot from 2024-09-22 15-30-01](https://github.com/user-attachments/assets/bef9af5b-d4cd-4c05-95ad-516de977e7e4)
 
 - Data is presented to user in Table format, using the external library Spectre.Console.
 - This app is beautified using Spectre.Console.
